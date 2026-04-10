@@ -316,6 +316,12 @@ function RecordCard({ rec, onDelete }) {
             {rec.monitorSizes?.length > 0 && (
               <InfoChip label="Polegadas" value={rec.monitorSizes.join(", ")} />
             )}
+            {rec.keyboardBrand && (
+              <InfoChip label="Teclado" value={`${rec.keyboardBrand}${rec.keyboardType ? " · " + rec.keyboardType : ""}`} />
+            )}
+            {rec.mouseBrand && (
+              <InfoChip label="Mouse" value={`${rec.mouseBrand}${rec.mouseType ? " · " + rec.mouseType : ""}`} />
+            )}
           </div>
           {rec.obs && (
             <div style={{
@@ -399,6 +405,10 @@ function App() {
   const [monitorCount, setMonitorCount] = useState("");
   const [monitorSizes, setMonitorSizes] = useState([]);
   const [ip, setIp] = useState("");
+  const [keyboardBrand, setKeyboardBrand] = useState("");
+  const [keyboardType, setKeyboardType] = useState("");
+  const [mouseBrand, setMouseBrand] = useState("");
+  const [mouseType, setMouseType] = useState("");
 
   const [filterSector, setFilterSector] = useState("");
   const [search, setSearch] = useState("");
@@ -416,6 +426,8 @@ function App() {
     setPhoto(null); setType(""); setName("");
     setSector(""); setEmployee(""); setObs("");
     setMonitorCount(""); setMonitorSizes([]); setIp("");
+    setKeyboardBrand(""); setKeyboardType("");
+    setMouseBrand(""); setMouseType("");
   };
 
   const handleMonitorCount = (val) => {
@@ -445,6 +457,10 @@ function App() {
       monitorCount: (type === "Desktop" || type === "") ? (parseInt(monitorCount) || 0) : 0,
       monitorSizes: (type === "Desktop" || type === "") ? monitorSizes.filter(Boolean) : [],
       ip: (type === "Desktop" || type === "" || type === "Impressora") ? ip : "",
+      keyboardBrand: (type === "Desktop" || type === "") ? keyboardBrand : "",
+      keyboardType: (type === "Desktop" || type === "") ? keyboardType : "",
+      mouseBrand: (type === "Desktop" || type === "") ? mouseBrand : "",
+      mouseType: (type === "Desktop" || type === "") ? mouseType : "",
       createdAt: new Date().toISOString(),
     };
     await saveRecord(rec);
@@ -469,6 +485,10 @@ function App() {
       IP: r.ip || "",
       Monitores: r.monitorCount || 0,
       Polegadas: r.monitorSizes?.join(", ") || "",
+      Teclado_Marca: r.keyboardBrand || "",
+      Teclado_Tipo: r.keyboardType || "",
+      Mouse_Marca: r.mouseBrand || "",
+      Mouse_Tipo: r.mouseType || "",
       Observação: r.obs,
       TemFoto: r.photo ? "Sim" : "Não",
     }));
@@ -519,7 +539,7 @@ function App() {
       {view === "form" && (
         <div style={{ padding: 16 }}>
           <PhotoCapture photo={photo} setPhoto={setPhoto} />
-          <SelectField label="Tipo de Equipamento" value={type} onChange={(v) => { setType(v); if (v !== "Desktop" && v !== "") { setMonitorCount(""); setMonitorSizes([]); } if (v !== "Desktop" && v !== "" && v !== "Impressora") { setIp(""); } }} options={EQUIPMENT_TYPES} />
+          <SelectField label="Tipo de Equipamento" value={type} onChange={(v) => { setType(v); if (v !== "Desktop" && v !== "") { setMonitorCount(""); setMonitorSizes([]); setKeyboardBrand(""); setKeyboardType(""); setMouseBrand(""); setMouseType(""); } if (v !== "Desktop" && v !== "" && v !== "Impressora") { setIp(""); } }} options={EQUIPMENT_TYPES} />
           {(type === "Desktop" || type === "") && (
             <div style={{ marginBottom: 14 }}>
               <label style={labelStyle}>Quantos Monitores?</label>
@@ -547,6 +567,52 @@ function App() {
           <TextField label="Identificação / Nome" value={name} onChange={setName} placeholder="Ex: PC-TI-01, Desktop Recepção..." />
           {(type === "Desktop" || type === "" || type === "Impressora") && (
             <TextField label="IP da Rede" value={ip} onChange={setIp} placeholder="Ex: 192.168.1.100" />
+          )}
+          {(type === "Desktop" || type === "") && (
+            <div style={{
+              marginBottom: 14, padding: 12, borderRadius: 12,
+              border: "1px solid #1e3a5f", background: "rgba(15,36,64,0.5)",
+            }}>
+              <label style={{ ...labelStyle, marginBottom: 10, fontSize: 12, color: "#94a3b8" }}>Teclado</label>
+              <div style={{ display: "flex", gap: 8 }}>
+                <div style={{ flex: 1 }}>
+                  <label style={labelStyle}>Marca</label>
+                  <input type="text" value={keyboardBrand} onChange={(e) => setKeyboardBrand(e.target.value)}
+                    placeholder="Ex: Logitech, Dell..." style={inputStyle} />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={labelStyle}>Tipo</label>
+                  <select value={keyboardType} onChange={(e) => setKeyboardType(e.target.value)} style={inputStyle}>
+                    <option value="">Selecione...</option>
+                    <option value="Com fio">Com fio</option>
+                    <option value="Sem fio">Sem fio</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          )}
+          {(type === "Desktop" || type === "") && (
+            <div style={{
+              marginBottom: 14, padding: 12, borderRadius: 12,
+              border: "1px solid #1e3a5f", background: "rgba(15,36,64,0.5)",
+            }}>
+              <label style={{ ...labelStyle, marginBottom: 10, fontSize: 12, color: "#94a3b8" }}>Mouse</label>
+              <div style={{ display: "flex", gap: 8 }}>
+                <div style={{ flex: 1 }}>
+                  <label style={labelStyle}>Marca</label>
+                  <input type="text" value={mouseBrand} onChange={(e) => setMouseBrand(e.target.value)}
+                    placeholder="Ex: Logitech, Dell..." style={inputStyle} />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={labelStyle}>Tipo</label>
+                  <select value={mouseType} onChange={(e) => setMouseType(e.target.value)} style={inputStyle}>
+                    <option value="">Selecione...</option>
+                    <option value="Com fio">Com fio</option>
+                    <option value="Sem fio">Sem fio</option>
+                  </select>
+                </div>
+              </div>
+            </div>
           )}
           <SelectField label="Setor" value={sector} onChange={setSector} options={SECTORS} required />
           <TextField label="Colaborador Vinculado" value={employee} onChange={setEmployee} placeholder="Nome do colaborador" />
