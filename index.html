@@ -307,6 +307,12 @@ function RecordCard({ rec, onDelete }) {
             <InfoChip label="Setor" value={rec.sector} />
             <InfoChip label="Colaborador" value={rec.employee || "—"} />
             <InfoChip label="Data" value={new Date(rec.createdAt).toLocaleDateString("pt-BR")} />
+            {rec.monitorCount > 0 && (
+              <InfoChip label="Monitores" value={`${rec.monitorCount}x`} />
+            )}
+            {rec.monitorSizes?.length > 0 && (
+              <InfoChip label="Polegadas" value={rec.monitorSizes.join(", ")} />
+            )}
           </div>
           {rec.obs && (
             <div style={{
@@ -387,6 +393,8 @@ function App() {
   const [sector, setSector] = useState("");
   const [employee, setEmployee] = useState("");
   const [obs, setObs] = useState("");
+  const [monitorCount, setMonitorCount] = useState("");
+  const [monitorSizes, setMonitorSizes] = useState([]);
 
   const [filterSector, setFilterSector] = useState("");
   const [search, setSearch] = useState("");
@@ -403,6 +411,25 @@ function App() {
   const resetForm = () => {
     setPhoto(null); setType(""); setName("");
     setSector(""); setEmployee(""); setObs("");
+    setMonitorCount(""); setMonitorSizes([]);
+  };
+
+  const handleMonitorCount = (val) => {
+    const n = parseInt(val) || 0;
+    setMonitorCount(val);
+    setMonitorSizes((prev) => {
+      const arr = [...prev];
+      while (arr.length < n) arr.push("");
+      return arr.slice(0, n);
+    });
+  };
+
+  const handleMonitorSize = (index, val) => {
+    setMonitorSizes((prev) => {
+      const arr = [...prev];
+      arr[index] = val;
+      return arr;
+    });
   };
 
   const handleSave = async () => {
@@ -411,6 +438,8 @@ function App() {
     const rec = {
       id: generateId(),
       photo, type: type || "Desktop", name, sector, employee, obs,
+      monitorCount: (type === "Desktop" || type === "") ? (parseInt(monitorCount) || 0) : 0,
+      monitorSizes: (type === "Desktop" || type === "") ? monitorSizes.filter(Boolean) : [],
       createdAt: new Date().toISOString(),
     };
     await saveRecord(rec);
@@ -431,7 +460,10 @@ function App() {
     const rows = records.map((r) => ({
       Data: new Date(r.createdAt).toLocaleDateString("pt-BR"),
       Tipo: r.type, Nome: r.name, Setor: r.sector,
-      Colaborador: r.employee, Observação: r.obs,
+      Colaborador: r.employee,
+      Monitores: r.monitorCount || 0,
+      Polegadas: r.monitorSizes?.join(", ") || "",
+      Observação: r.obs,
       TemFoto: r.photo ? "Sim" : "Não",
     }));
     const headers = Object.keys(rows[0] || {});
@@ -481,7 +513,31 @@ function App() {
       {view === "form" && (
         <div style={{ padding: 16 }}>
           <PhotoCapture photo={photo} setPhoto={setPhoto} />
-          <SelectField label="Tipo de Equipamento" value={type} onChange={setType} options={EQUIPMENT_TYPES} />
+          <SelectField label="Tipo de Equipamento" value={type} onChange={(v) => { setType(v); if (v !== "Desktop" && v !== "") { setMonitorCount(""); setMonitorSizes([]); } }} options={EQUIPMENT_TYPES} />
+          {(type === "Desktop" || type === "") && (
+            <div style={{ marginBottom: 14 }}>
+              <label style={labelStyle}>Quantos Monitores?</label>
+              <select value={monitorCount} onChange={(e) => handleMonitorCount(e.target.value)} style={inputStyle}>
+                <option value="">Selecione...</option>
+                {[0,1,2,3,4].map((n) => <option key={n} value={n}>{n}</option>)}
+              </select>
+              {monitorSizes.length > 0 && (
+                <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 8 }}>
+                  {monitorSizes.map((size, i) => (
+                    <div key={i}>
+                      <label style={{ ...labelStyle, marginBottom: 4 }}>Polegadas - Monitor {i + 1}</label>
+                      <select value={size} onChange={(e) => handleMonitorSize(i, e.target.value)} style={inputStyle}>
+                        <option value="">Selecione...</option>
+                        {["14\"","15.6\"","17\"","18.5\"","19\"","20\"","21.5\"","22\"","23\"","23.8\"","24\"","27\"","29\"","32\"","34\"","Outro"].map((p) => (
+                          <option key={p} value={p}>{p}</option>
+                        ))}
+                      </select>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
           <TextField label="Identificação / Nome" value={name} onChange={setName} placeholder="Ex: PC-TI-01, Desktop Recepção..." />
           <SelectField label="Setor" value={sector} onChange={setSector} options={SECTORS} required />
           <TextField label="Colaborador Vinculado" value={employee} onChange={setEmployee} placeholder="Nome do colaborador" />
