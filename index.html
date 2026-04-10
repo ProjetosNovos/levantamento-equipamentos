@@ -307,6 +307,9 @@ function RecordCard({ rec, onDelete }) {
             <InfoChip label="Setor" value={rec.sector} />
             <InfoChip label="Colaborador" value={rec.employee || "—"} />
             <InfoChip label="Data" value={new Date(rec.createdAt).toLocaleDateString("pt-BR")} />
+            {rec.ip && (
+              <InfoChip label="IP" value={rec.ip} />
+            )}
             {rec.monitorCount > 0 && (
               <InfoChip label="Monitores" value={`${rec.monitorCount}x`} />
             )}
@@ -395,6 +398,7 @@ function App() {
   const [obs, setObs] = useState("");
   const [monitorCount, setMonitorCount] = useState("");
   const [monitorSizes, setMonitorSizes] = useState([]);
+  const [ip, setIp] = useState("");
 
   const [filterSector, setFilterSector] = useState("");
   const [search, setSearch] = useState("");
@@ -411,7 +415,7 @@ function App() {
   const resetForm = () => {
     setPhoto(null); setType(""); setName("");
     setSector(""); setEmployee(""); setObs("");
-    setMonitorCount(""); setMonitorSizes([]);
+    setMonitorCount(""); setMonitorSizes([]); setIp("");
   };
 
   const handleMonitorCount = (val) => {
@@ -440,6 +444,7 @@ function App() {
       photo, type: type || "Desktop", name, sector, employee, obs,
       monitorCount: (type === "Desktop" || type === "") ? (parseInt(monitorCount) || 0) : 0,
       monitorSizes: (type === "Desktop" || type === "") ? monitorSizes.filter(Boolean) : [],
+      ip: (type === "Desktop" || type === "" || type === "Impressora") ? ip : "",
       createdAt: new Date().toISOString(),
     };
     await saveRecord(rec);
@@ -461,6 +466,7 @@ function App() {
       Data: new Date(r.createdAt).toLocaleDateString("pt-BR"),
       Tipo: r.type, Nome: r.name, Setor: r.sector,
       Colaborador: r.employee,
+      IP: r.ip || "",
       Monitores: r.monitorCount || 0,
       Polegadas: r.monitorSizes?.join(", ") || "",
       Observação: r.obs,
@@ -513,7 +519,7 @@ function App() {
       {view === "form" && (
         <div style={{ padding: 16 }}>
           <PhotoCapture photo={photo} setPhoto={setPhoto} />
-          <SelectField label="Tipo de Equipamento" value={type} onChange={(v) => { setType(v); if (v !== "Desktop" && v !== "") { setMonitorCount(""); setMonitorSizes([]); } }} options={EQUIPMENT_TYPES} />
+          <SelectField label="Tipo de Equipamento" value={type} onChange={(v) => { setType(v); if (v !== "Desktop" && v !== "") { setMonitorCount(""); setMonitorSizes([]); } if (v !== "Desktop" && v !== "" && v !== "Impressora") { setIp(""); } }} options={EQUIPMENT_TYPES} />
           {(type === "Desktop" || type === "") && (
             <div style={{ marginBottom: 14 }}>
               <label style={labelStyle}>Quantos Monitores?</label>
@@ -539,6 +545,9 @@ function App() {
             </div>
           )}
           <TextField label="Identificação / Nome" value={name} onChange={setName} placeholder="Ex: PC-TI-01, Desktop Recepção..." />
+          {(type === "Desktop" || type === "" || type === "Impressora") && (
+            <TextField label="IP da Rede" value={ip} onChange={setIp} placeholder="Ex: 192.168.1.100" />
+          )}
           <SelectField label="Setor" value={sector} onChange={setSector} options={SECTORS} required />
           <TextField label="Colaborador Vinculado" value={employee} onChange={setEmployee} placeholder="Nome do colaborador" />
           <TextArea label="Observações" value={obs} onChange={setObs} placeholder="Detalhes adicionais, patrimônio, modelo..." />
